@@ -9,3 +9,4 @@ During the course, the following frameworks and libraries are going to be used:
 - JsonPath
 - Jacoco
 - Pitest
+- Apache Commons

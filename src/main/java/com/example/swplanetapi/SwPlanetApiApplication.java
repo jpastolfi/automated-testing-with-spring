@@ -9,5 +9,4 @@ public class SwPlanetApiApplication {
 	public static void main(String[] args) {
 		SpringApplication.run(SwPlanetApiApplication.class, args);
 	}
-
 }

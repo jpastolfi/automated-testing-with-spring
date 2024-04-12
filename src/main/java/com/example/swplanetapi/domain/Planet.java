@@ -5,10 +5,18 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import org.apache.commons.lang3.builder.EqualsBuilder;
 
 @Entity
 @Table(name = "planets")
 public class Planet {
+
+  public Planet(String name, String climate, String terrain) {
+    this.name = name;
+    this.climate = climate;
+    this.terrain = terrain;
+  }
+
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
@@ -48,4 +56,8 @@ public class Planet {
     this.terrain = terrain;
   }
 
+  @Override
+  public boolean equals(Object obj) {
+    return EqualsBuilder.reflectionEquals(obj, this);
+  }
 }
