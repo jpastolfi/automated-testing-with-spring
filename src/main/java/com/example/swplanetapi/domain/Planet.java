@@ -1,5 +1,6 @@
 package com.example.swplanetapi.domain;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -17,12 +18,20 @@ public class Planet {
     this.terrain = terrain;
   }
 
+  public Planet() {
+  }
+
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
   private String name;
   private String climate;
   private String terrain;
+
+  public Planet(String climate, String terrain) {
+    this.climate = climate;
+    this.terrain = terrain;
+  }
 
   public Long getId() {
     return id;
