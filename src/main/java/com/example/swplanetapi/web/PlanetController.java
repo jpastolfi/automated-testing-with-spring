@@ -3,6 +3,7 @@ package com.example.swplanetapi.web;
 import com.example.swplanetapi.domain.Planet;
 import com.example.swplanetapi.domain.PlanetService;
 import com.example.swplanetapi.exception.PlanetNotFoundException;
+import jakarta.validation.Valid;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -27,7 +28,7 @@ public class PlanetController {
   }
 
   @PostMapping
-  public ResponseEntity<Planet> create(@RequestBody Planet planet) {
+  public ResponseEntity<Planet> create(@RequestBody @Valid Planet planet) {
     Planet createdPlanet = planetService.create(planet);
     return ResponseEntity.status(HttpStatus.CREATED).body(createdPlanet);
   }
