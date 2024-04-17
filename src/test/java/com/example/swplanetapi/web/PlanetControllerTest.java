@@ -1,10 +1,13 @@
 package com.example.swplanetapi.web;
 
+import com.example.swplanetapi.domain.Planet;
 import com.example.swplanetapi.domain.PlanetService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
@@ -12,7 +15,9 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import static com.example.swplanetapi.common.PlanetConstants.EMPTYPLANET;
 import static com.example.swplanetapi.common.PlanetConstants.NULLPLANET;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static com.example.swplanetapi.common.PlanetConstants.PLANET;
@@ -23,6 +28,9 @@ public class PlanetControllerTest {
 
   @MockBean
   private PlanetService planetService;
+
+  // @Autowired
+  // private TestEntityManager testEntityManager;
 
   @Autowired
   private MockMvc mockMvc;
@@ -63,5 +71,23 @@ public class PlanetControllerTest {
             .content(objectMapper.writeValueAsString(NULLPLANET))
             .contentType(MediaType.APPLICATION_JSON))
         .andExpect(status().isUnprocessableEntity());
+  }
+
+  @Test
+  public void getPlanet_ByExistingId_ReturnsPlanet() throws Exception {
+    when(planetService.getById(any())).thenReturn(Optional.of(PLANET));
+    mockMvc.perform(get(
+        "/planets/1"
+    ).contentType(MediaType.APPLICATION_JSON))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$").value(PLANET));
+  }
+
+  @Test
+  public void getPlanet_ByNonExistingId_ThrowsException() throws Exception {
+    when(planetService.getById(any())).thenReturn(Optional.empty());
+    mockMvc.perform(get("/planets/1")
+        .contentType(MediaType.APPLICATION_JSON))
+        .andExpect(status().isNotFound());
   }
 }
