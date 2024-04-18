@@ -78,4 +78,7 @@ Para testar corpos inválidos, vamos precisar inserir a validação no controlad
   }
 ```
 
-Isso vai fazer com que tentativas de criação de planetas com dados inválidos (como definido na entidade) retornem um status 400. Se quisermos um status diferente desse, podemos criar um handler de exceções com as anotações @ControllerAdvice, que vai aplicar esse handler para toda a camada controller, e extends @ResponseEntityExceptionHandler, para sobreescrever o comportamento de validação do corpo da requisição. O @ResponseEntityExceptionHandler é um exception handler padrão para lidar com entidades de resposta. Dentro dele já existe um método que lida com o problema de argumentos inválidos na requisição 
+Isso vai fazer com que tentativas de criação de planetas com dados inválidos (como definido na entidade) retornem um status 400. Se quisermos um status diferente desse, podemos criar um handler de exceções com as anotações @ControllerAdvice, que vai aplicar esse handler para toda a camada controller, e extends @ResponseEntityExceptionHandler, para sobreescrever o comportamento de validação do corpo da requisição. O @ResponseEntityExceptionHandler é um exception handler padrão para lidar com entidades de resposta. Dentro dele já existe um método que lida com o problema de argumentos inválidos na requisição
+
+## Executando um script com uma query SQL para popular uma tabela com dados
+Podemos querer popular uma tabela com entidades para podermos executar testes. Para isso, podemos usar junto da anotação @Test a notação @Sql(scripts = path/arquivo.sql), passando o caminho do arquivo .sql. Se colocarmos o arquivo dentro do diretório test/resources, podemos acessar diretamente com /nome_do_arquivo.sql

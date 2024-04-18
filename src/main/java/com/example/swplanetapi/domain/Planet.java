@@ -15,6 +15,13 @@ import org.apache.commons.lang3.builder.EqualsBuilder;
 @Table(name = "planets")
 public class Planet {
 
+  public Planet(Long id, String name, String climate, String terrain) {
+    this.id = id;
+    this.name = name;
+    this.climate = climate;
+    this.terrain = terrain;
+  }
+
   public Planet(String name, String climate, String terrain) {
     this.name = name;
     this.climate = climate;
