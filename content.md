@@ -82,3 +82,62 @@ Isso vai fazer com que tentativas de criação de planetas com dados inválidos 
 
 ## Executando um script com uma query SQL para popular uma tabela com dados
 Podemos querer popular uma tabela com entidades para podermos executar testes. Para isso, podemos usar junto da anotação @Test a notação @Sql(scripts = path/arquivo.sql), passando o caminho do arquivo .sql. Se colocarmos o arquivo dentro do diretório test/resources, podemos acessar diretamente com /nome_do_arquivo.sql
+
+# Testes e2e / subcutâneos
+## Configurando o servidor de aplicação
+Quando usamos o MockMvc, estamos usando um servidor mockado. Para testar a aplicação end to end, precisamos usar um servidor real. Na nossa pasta de testes, vamos criar uma classe chamda PlanetIT para abrigar esses testes, que são mais "caros" de usar pois levam mais tempo e usam mais recursos.
+
+Para subir esse servidor de aplicação e criar o contexto de aplicação do Spring e colocar todos os Beans nele, vamos usar a anotação @SpringBootTest. Vamos criar um teste vazio chamado contextLoads apenas para testar o carregamento do contexto da aplicação. 
+
+Como essa anotação cria um ambiente web mockado, vamos ajustar para que seja o servidor real (Tomcat). Vamos configurar o ambiente web que vai ser utilizado pelo @SpringBootTest como o parâmetro (webEnvironment = port), onde port é a porta que será usada para subir o Tomcat. Se não informarmos nada, será usada a porta 8080. Para evitar conflitos, vamos escolher uma porta aleatória usando WebEnvironment.RANDOM_PORT.
+## Configurando um banco MySQL para os testes
+Vamos criar um perfil para os nossos testes e2e. O nome do perfil será application-ti.properties e vamos usar a anotação @ActiveProfiles("it") para selecionar esse perfil criado. O arquivo de perfil ficará assim:
+```
+# Configuracao do DataSource
+spring.datasource.url=${MYSQL_HOST:jdbc:mysql://localhost/starwars?useSSL=false}
+spring.datasource.username=${SPRING_DATASOURCE_USERNAME:user}
+spring.datasource.password=${SPRING_DATASOURCE_PASSWORD:123456}
+
+# Configuracao do Hibernate
+spring.jpa.hibernate.ddl-auto=update
+
+# Configuracao da JPA - Habilita Log na execucao de SQL
+spring.jpa.show-sql=true
+```
+## Fazendo os testes
+Para fazer as requisições vamos usar um componente chamado TestRestTemplate, que será injetado pelo Spring usando @Autowired. Para fazer o teste de criação de planeta, precisamos fazer uma requisição POST. O TestRestTemplate tem um método chamado postForEntity, que faz uma requisição POST e já traduz a resposta de JSON para o tipo de entidade passado por parâmetro. Passamos três parâmetros para esse método: url, corpo da requisição e tipo do corpo da resposta para serialização. No nosso caso, seria `testRestTemplate.postForEntity("/planets", PLANET, Planet.class);`. Salvamos isso em uma variável do tipo `ResponseEntity<Planet>`, afinal, é isso que o nosso controlador retorna. O rest template tem um método genérico para requisições HTTP que podemos usar para obter um retorno mesmo que ele seja um `ResponseEntity<Void>`: exchange. Para usá-lo, devemos passar a URL, o método da requisição, o corpo da requisição e o tipo da resposta.
+
+## Configurando rollback para os testes
+Se estivermos fazendo um teste de criação com algum atributo unique, não vamos conseguir rodar esse teste mais de uma vez porque já haverá uma entidade com esse atributo no banco de dados (partindo da ideia que no perfil de testes temos spring.jpa.hibernate.ddl-auto=update). Para resolver isso, podemos criar um script SQL que vai limpar o banco após cada teste. O script em si será `TRUNCATE TABLE planets`. Truncate é um comando que remove os registros da tabela informada de forma mais ágil que o DELETE. Agora precisamos avisar a classe de testes que esse script deve ser executado após cada teste. Para isso, vamos anotar a classe com @Sql(scripts = { "/remove_planets.sql" }, executionPhase = ExecutionPhase.AFTER_TEST_METHOD). O segundo parâmetro especifica em qual fase de execução o script deve ser executado.
+
+## Utilizando o WebTestClient (substituto do TestRestTemplate)
+No Spring 5, foi introduzido um cliente web reativo (parte do módulo Webflux), o WebClient, e sua versão para testes, o WebTestClient. Ele surgiu como um substituto para o RestTemplate, pois utiliza uma abordagem não bloqueante para fazer requisições e ainda permite utilizar uma linguagem fluente, bem mais tranquila de entender.
+
+Vamos observar o exemplo de teste feito com o TestRestTemplate:
+```
+@Test
+public void createPlanet_ReturnsCreated() {
+  ResponseEntity<Planet> sut = 
+    restTemplate.postForEntity("/planets", PLANET, Planet.class);
+ 
+  assertThat(sut.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+  assertThat(sut.getBody().getId()).isNotNull();
+  assertThat(sut.getBody().getName()).isEqualTo(PLANET.getName());
+  // Omitidos por simplicidade
+}
+```
+Observe que o método postForEntity recebe vários parâmetros para fazer uma requisição post para o serviço web que estamos testando. Agora olha a versão com o WebTestClient:
+```
+@Test
+public void createPlanet_ReturnsCreated() {
+  Planet sut = webTestClient.post().uri("/planets").bodyValue(PLANET)
+    .exchange().expectStatus().isCreated().expectBody(Planet.class)
+    .returnResult().getResponseBody();
+ 
+  assertThat(sut.getId()).isNotNull();
+  assertThat(sut.getName()).isEqualTo(PLANET.getName());
+  // Omitidos por simplicidade
+}
+```
+A requisição é construída de forma fluente, onde cada parâmetro é informado num método específico que o utiliza, trazendo uma espécie de semântica melhor à requisição HTTP.
+

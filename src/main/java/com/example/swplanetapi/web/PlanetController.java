@@ -45,9 +45,9 @@ public class PlanetController {
         .orElseGet(() -> ResponseEntity.notFound().build());
   }
 
-  @GetMapping()
+  @GetMapping
   public ResponseEntity<List<Planet>> getByClimateAndTerrain(@RequestParam(required = false) String climate, @RequestParam(required = false) String terrain) {
-    List<Planet> planets = planetService.list(terrain, climate);
+    List<Planet> planets = planetService.list(climate, terrain);
     return ResponseEntity.ok(planets);
   }
 
