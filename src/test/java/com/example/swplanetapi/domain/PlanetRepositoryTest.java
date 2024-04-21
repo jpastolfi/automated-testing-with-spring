@@ -13,9 +13,13 @@ import static org.mockito.ArgumentMatchers.anyString;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
@@ -49,10 +53,29 @@ public class PlanetRepositoryTest {
     assertThat(sut.getTerrain()).isEqualTo(planet.getTerrain());
   }
 
-  @Test
-  public void createPlanet_WithInvalidData_ThrowsException() {
-    assertThatThrownBy(() -> planetRepository.save(EMPTYPLANET)).isInstanceOf(RuntimeException.class);
-    assertThatThrownBy(() -> planetRepository.save(NULLPLANET)).isInstanceOf(RuntimeException.class);
+  @ParameterizedTest
+  @MethodSource("providesInvalidPlanets")
+  public void createPlanet_WithInvalidData_ThrowsException(Planet planet) {
+    assertThatThrownBy(() -> planetRepository.save(planet)).isInstanceOf(RuntimeException.class);
+  }
+
+  private static Stream<Arguments> providesInvalidPlanets() {
+    return Stream.of(
+        Arguments.of(new Planet(null, "climate", "terrain")),
+        Arguments.of(new Planet("name", null, "terrain")),
+        Arguments.of(new Planet("name", "climate", null)),
+        Arguments.of(new Planet(null, null, "terrain")),
+        Arguments.of(new Planet(null, "climate", null)),
+        Arguments.of(new Planet("name", null, null)),
+        Arguments.of(new Planet(null, null, null)),
+        Arguments.of(new Planet("", "climate", "terrain")),
+        Arguments.of(new Planet("name", "", "terrain")),
+        Arguments.of(new Planet("name", "climate", "")),
+        Arguments.of(new Planet("", "", "terrain")),
+        Arguments.of(new Planet("", "climate", "")),
+        Arguments.of(new Planet("name", "", "")),
+        Arguments.of(new Planet("", "", ""))
+    );
   }
 
   @Test
@@ -76,7 +99,7 @@ public class PlanetRepositoryTest {
 
   @Test
   public void getPlanet_ByNonExistingId_ThrowsException() {
-    assertThatThrownBy(() -> planetRepository.findById(any())).isInstanceOf(RuntimeException.class);
+    assertThat(planetRepository.findById(99L)).isEmpty();
   }
 
   @Test
@@ -89,7 +112,7 @@ public class PlanetRepositoryTest {
 
   @Test
   public void getPlanet_ByNonExistingName_ThrowsException() {
-    Optional<Planet> notFoundPlanet = planetRepository.findByName(anyString());
+    Optional<Planet> notFoundPlanet = planetRepository.findByName("any planet");
     assertThat(notFoundPlanet).isEmpty();
   }
 

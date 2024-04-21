@@ -20,7 +20,6 @@ import static com.example.swplanetapi.common.PlanetConstants.NULLPLANET;
 import static com.example.swplanetapi.common.PlanetConstants.PLANETS;
 import static com.example.swplanetapi.common.PlanetConstants.TATOOINE;
 import static org.hamcrest.Matchers.hasSize;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doThrow;
@@ -84,7 +83,7 @@ public class PlanetControllerTest {
 
   @Test
   public void getPlanet_ByExistingId_ReturnsPlanet() throws Exception {
-    when(planetService.getById(any())).thenReturn(Optional.of(PLANET));
+    when(planetService.getById(anyLong())).thenReturn(Optional.of(PLANET));
     mockMvc.perform(get(
         "/planets/1"
     ).contentType(MediaType.APPLICATION_JSON))
@@ -94,7 +93,7 @@ public class PlanetControllerTest {
 
   @Test
   public void getPlanet_ByNonExistingId_ThrowsException() throws Exception {
-    when(planetService.getById(any())).thenReturn(Optional.empty());
+    when(planetService.getById(anyLong())).thenReturn(Optional.empty());
 
     mockMvc.perform(get("/planets/1")
         .contentType(MediaType.APPLICATION_JSON))
@@ -134,7 +133,7 @@ public class PlanetControllerTest {
         .andExpect(jsonPath("$", hasSize(3)));
 
     mockMvc.perform(get(
-        "/planets?terrain=%s&climate=%s".formatted(TATOOINE.getClimate(), TATOOINE.getTerrain())
+        "/planets?climate=%s&terrain=%s".formatted(TATOOINE.getClimate(), TATOOINE.getTerrain())
     ))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$", hasSize(1)))
